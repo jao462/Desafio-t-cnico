@@ -1,0 +1,41 @@
+services:
+  database:
+    image: postgres:16-alpine
+    container_name: course_manager_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-course_manager}
+      POSTGRES_USER: ${POSTGRES_USER:-course_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-course_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-course_user} -d ${POSTGRES_DB:-course_manager}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  frontend:
+    build: ./frontend
+    container_name: course_manager_frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+  api:
+    build: ./backend
+    container_name: course_manager_api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-course_user}:${POSTGRES_PASSWORD:-course_password}@database:5432/${POSTGRES_DB:-course_manager}
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      database:
+        condition: service_healthy
+    command: sh -c "npm run migrate && npm run seed && npm run dev"
+volumes:
+  postgres_data:

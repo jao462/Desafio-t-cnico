@@ -1,0 +1,97 @@
+openapi: 3.0.3
+info:
+  title: Online Course Manager API
+  version: 1.0.0
+  description: REST API for managing users, courses, modules, lessons and reports.
+servers:
+  - url: http://localhost:3001
+paths:
+  /api/health:
+    get:
+      summary: Check API health
+      responses:
+        '200': { description: API is running }
+  /api/users:
+    get:
+      summary: List users
+      responses:
+        '200': { description: User list }
+    post:
+      summary: Create user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email]
+              properties:
+                name: { type: string }
+                email: { type: string, format: email }
+                status: { type: string, enum: [active, inactive] }
+      responses:
+        '201': { description: User created }
+        '400': { description: Validation error }
+  /api/users/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      summary: Get user
+      responses:
+        '200': { description: User found }
+        '404': { description: Not found }
+    put:
+      summary: Update user
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, properties: { name: { type: string }, email: { type: string }, status: { type: string } } }
+      responses:
+        '200': { description: User updated }
+    delete:
+      summary: Delete user
+      responses:
+        '204': { description: User deleted }
+  /api/courses:
+    get: { summary: List courses, responses: { '200': { description: Course list } } }
+    post: { summary: Create course, responses: { '201': { description: Course created } } }
+  /api/courses/{id}:
+    get: { summary: Get course, parameters: [{ in: path, name: id, required: true, schema: { type: string } }], responses: { '200': { description: Course found } } }
+    put: { summary: Update course, parameters: [{ in: path, name: id, required: true, schema: { type: string } }], responses: { '200': { description: Course updated } } }
+    delete: { summary: Delete course, parameters: [{ in: path, name: id, required: true, schema: { type: string } }], responses: { '204': { description: Course deleted } } }
+  /api/modules:
+    get: { summary: List modules, responses: { '200': { description: Module list } } }
+    post: { summary: Create module, responses: { '201': { description: Module created } } }
+  /api/modules/{id}:
+    get: { summary: Get module, parameters: [{ in: path, name: id, required: true, schema: { type: string } }], responses: { '200': { description: Module found } } }
+    put: { summary: Update module, parameters: [{ in: path, name: id, required: true, schema: { type: string } }], responses: { '200': { description: Module updated } } }
+    delete: { summary: Delete module, parameters: [{ in: path, name: id, required: true, schema: { type: string } }], responses: { '204': { description: Module deleted } } }
+  /api/contents:
+    get: { summary: List contents, responses: { '200': { description: Content list } } }
+    post: { summary: Create content, responses: { '201': { description: Content created } } }
+  /api/contents/{id}:
+    get: { summary: Get content, parameters: [{ in: path, name: id, required: true, schema: { type: string } }], responses: { '200': { description: Content found } } }
+    put: { summary: Update content, parameters: [{ in: path, name: id, required: true, schema: { type: string } }], responses: { '200': { description: Content updated } } }
+    delete: { summary: Delete content, parameters: [{ in: path, name: id, required: true, schema: { type: string } }], responses: { '204': { description: Content deleted } } }
+  /api/progress:
+    get: { summary: List watched lessons, responses: { '200': { description: Progress list } } }
+    post: { summary: Mark a lesson as watched, responses: { '201': { description: Progress saved } } }
+  /api/reports/users-courses:
+    get: { summary: Users ordered by number of courses, responses: { '200': { description: Report data } } }
+  /api/reports/courses-content-count:
+    get: { summary: Courses ordered by number of lessons, responses: { '200': { description: Report data } } }
+  /api/reports/courses-summary:
+    get: { summary: Course module and lesson totals, responses: { '200': { description: Report data } } }
+  /api/reports/contents-with-course:
+    get: { summary: Lessons with course name, responses: { '200': { description: Report data } } }
+  /api/reports/content-2-viewers:
+    get:
+      summary: Users who watched a content item
+      parameters:
+        - in: query
+          name: contentId
+          schema: { type: string }
+      responses: { '200': { description: Users who watched the selected lesson } }

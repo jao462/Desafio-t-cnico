@@ -1,0 +1,26 @@
+const express = require('express');
+const cors = require('cors');
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
+const createCrudRouter = require('./utils/crudRouter');
+const reportRoutes = require('./routes/reportRoutes');
+const progressRoutes = require('./routes/progressRoutes');
+const app = express();
+app.use(cors());
+app.use(express.json());
+app.get('/api/health', (req, res) => res.json({ status: 'ok', service: 'online-course-manager-api' }));
+app.use('/api/users', createCrudRouter('users', ['id', 'name', 'email', 'status', 'created_at', 'updated_at'], { label: 'User', required: ['name', 'email'], email: true, status: true }));
+app.use('/api/courses', createCrudRouter('courses', ['id', 'code', 'title', 'description', 'user_id', 'created_at', 'updated_at'], { label: 'Course', required: ['code', 'title', 'user_id'] }));
+app.use('/api/modules', createCrudRouter('modules', ['id', 'course_id', 'title', 'description', 'user_id', 'created_at', 'updated_at'], { label: 'Module', required: ['course_id', 'title', 'user_id'] }));
+app.use('/api/contents', createCrudRouter('contents', ['id', 'module_id', 'title', 'content', 'created_at', 'updated_at'], { label: 'Content', required: ['module_id', 'title', 'content'] }));
+app.use('/api/progress', progressRoutes);
+app.use('/api/reports', reportRoutes);
+const swaggerDocument = YAML.load(`${__dirname}/../openapi.yaml`);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use((err, req, res, next) => {
+  if (err.code === '23505') return res.status(409).json({ error: 'A record with this unique value already exists' });
+  if (err.code === '23503') return res.status(400).json({ error: 'A referenced record does not exist or is still in use' });
+  console.error(err);
+  res.status(500).json({ error: 'Internal server error' });
+});
+module.exports = app;
